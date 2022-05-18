@@ -1,0 +1,6 @@
+build/
+datafiles
+simDER
+__pycache__
+.idea/
+option.txt

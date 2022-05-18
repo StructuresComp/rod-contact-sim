@@ -1,0 +1,27 @@
+helixRadius        0.01
+helixPitch         0.05
+numFlagella        2
+rodRadius          1e-3
+youngM             3.0e6
+Poisson            0.5
+deltaTime          1e-3
+totalTime          250
+tol                1.0e-3
+stol               1.0e-3
+maxIter            1000
+density            10000
+gVector            0.0 0.0 -0.0
+viscosity          1.0
+epsilon            1.02e-3
+axisLengthInput    0.2
+deltaLengthInput   5e-3
+distance           0.03
+render             0
+saveData           0
+omega              15
+mu                 0.0
+nu                 1e-4
+delta              1e-5
+colLimit           2e-3
+lineSearch         1
+ipc                0
