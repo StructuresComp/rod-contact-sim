@@ -121,6 +121,10 @@ void collisionDetector::computeMinDistance(int &idx1, int &idx2, int &idx3, int 
     }
     fixbound(t);
 
+    // arrange the idx of the nodes based on the contact type
+    // p2p, idx1 and idx2 are for two contact nodes
+    // p2e, idx1 is for p; idx2 and idx3 are for e
+    // e2e, idx1 and idx2 are for one e; idx3 and idx4 are for another e
     if ((t == 0 || t == 1) && (uf == 0 || uf == 1))
     {
         if (t == 0) {

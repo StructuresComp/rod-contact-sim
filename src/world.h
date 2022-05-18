@@ -153,9 +153,6 @@ private:
 
     void newtonMethod(bool &solved);
 
-    double eta_par;
-    double eta_per;
-
     int friction;
     int line_search;
 

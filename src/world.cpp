@@ -38,18 +38,15 @@ world::world(setInput &m_inputData) {
     ipc = m_inputData.GetIntOpt("ipc");
 
     ////////////////
-    double nTurn = axisLengthInput / helixPitch;
-    RodLength = nTurn * sqrt((2 * M_PI * helixRadius) * (2 * M_PI * helixRadius) + helixPitch * helixPitch);
-    int newNe = RodLength / deltaLengthInput;
-    numVertices = newNe + 1;
+    //rod length and numVertices defined in function world::rodGeometry()
+    // double nTurn = axisLengthInput / helixPitch;
+    // RodLength = nTurn * sqrt((2 * M_PI * helixRadius) * (2 * M_PI * helixRadius) + helixPitch * helixPitch);
+    // int newNe = RodLength / deltaLengthInput;
+    // numVertices = newNe + 1;
 
     ///////////////////
 
     shearM = youngM / (2.0 * (1.0 + Poisson));                    // shear modulus
-
-    // Read input file to get angular velocity
-    eta_per = 4.0 * M_PI * viscosity / (log(2 * RodLength / rodRadius) + 0.5);
-    eta_par = 2.0 * M_PI * viscosity / (log(2 * RodLength / rodRadius) - 0.5);
 }
 
 world::~world() {
@@ -114,30 +111,34 @@ void world::CoutData(ofstream &simfile, ofstream &configfile, double &time_taken
     } else {
         contact_stiffness = m_contactPotentialIPC->contact_stiffness;
     }
-
-    double u = 0;
-
-    for (int i = 0; i < rodsVector.size(); i++) {
-        for (int j = 0; j < rodsVector[i]->nv; j++) {
-            Vector3d temp = rodsVector[i]->u.segment(4 * j, 3);
-            if (temp.norm() > u) {
-                u = temp.norm();
-            }
-        }
-    }
-    double Re = 1000 * u * 1e-3;
-
+    //calculate the mean value of the end distance
     double dis = 0;
+    int count = 0;
+    vector <Vector3d> endNode;
+    endNode.clear();
+    for (int n = 0; n < rodsVector.size(); n++)
+    {
+      endNode.push_back(rodsVector[n]->getVertex(rodsVector[n]->nv - 1));
+    }
 
-    Vector3d temp = rodsVector[0]->getVertex(rodsVector[0]->nv - 1);
-    Vector3d temp1 = rodsVector[1]->getVertex(rodsVector[1]->nv - 1);
-    dis = (temp - temp1).norm();
+    for (int i = 0; i < endNode.size()-1; i++)
+    {
+      Vector3d temp = endNode[i];
+      for (int j = i+1; j < endNode.size(); j++)
+      {
+        Vector3d temp1 = endNode[j];
+        dis = dis + (temp - temp1).norm();
+        count++;
+      }
+    }
+    dis = dis/count;
 
-    Vector3d force = stepper->force.segment(0, 3) + stepper->force.segment(4, 3);
-    Vector3d force1 =
-            stepper->force.segment(rodsVector[0]->ndof, 3) + stepper->force.segment(rodsVector[0]->ndof + 4, 3);
-    Vector3d Fp = force + force1;
-
+    // external forces (should be equal to the propulisve force)
+    Vector3d Fp(0, 0, 0);
+    for (int n = 0; n < rodsVector.size(); n++)
+    {
+      Fp = Fp + stepper->force.segment(rodsVector[n]->ndof *n , 3) + stepper->force.segment(rodsVector[n]->ndof *n  +4, 3);
+    }
 
     // hydrodynamic force
     Vector3d fp(0, 0, 0);
@@ -158,7 +159,7 @@ void world::CoutData(ofstream &simfile, ofstream &configfile, double &time_taken
 
     simfile << currentTime << " " << iter << " " << m_collisionDetector->num_collisions << " " <<
             time_taken << " " << m_collisionDetector->min_dist << " " << contact_stiffness <<
-            " " << Re << " " << dis << " " << Fp(0) << " " << Fp(1) << " " << Fp(2) << " " << fp(0) <<
+            " " << dis << " " << Fp(0) << " " << Fp(1) << " " << Fp(2) << " " << fp(0) <<
             " " << fp(1) << " " << fp(2) << " " << inertiaF(0) << " " << inertiaF(1) << " " << inertiaF(2) << " "
             << normf << " "
             << normf0 << endl;
@@ -232,6 +233,7 @@ void world::setRodStepper() {
 }
 
 void world::rodGeometry(double offset_x, double offset_y, double offset_theta) {
+    // arrange the rotation and position of each flagella initially
     vertices = MatrixXd(numVertices, 3);
 
     double helixA = helixRadius;
@@ -240,7 +242,7 @@ void world::rodGeometry(double offset_x, double offset_y, double offset_theta) {
     double T = axisLengthInput / helixB;
 
     double newRodLength = T * sqrt(helixA * helixA + helixB * helixB);
-
+    // define rod length and numVertices
     RodLength = newRodLength;
 
     int newNe = RodLength / deltaLengthInput;
@@ -296,7 +298,7 @@ void world::updateBoundary() {
     // apply omega for b.c.
 
     for (int i = 0; i < numRod; i++) {
-        deltaTheta = omega * (2.0 * M_PI / 60.0) * deltaTime * (-1.0);
+        deltaTheta = omega * (2.0 * M_PI / 60.0) * deltaTime * (-1.0); //CCW direction
 
         rodsVector[i]->x = rodsVector[i]->x0;
         rodsVector[i]->setThetaBoundaryCondition(rodsVector[i]->getTheta(0) + deltaTheta, 0);
@@ -368,7 +370,7 @@ void world::newtonMethod(bool &solved) {
             v_gravityForce[n]->computeJg();
         }
 
-        m_RegularizedStokeslet->computeFrs();
+        m_RegularizedStokeslet->computeFrs(); // RSS model
 
         m_collisionDetector->detectCollisions();
         if (!ipc) {
@@ -525,7 +527,7 @@ double world::lineSearch() {
     double a = 1;
 
     //compute the slope initially
-    double q0 = 0.5 * pow(stepper->Force.norm(), 2);
+    double q0 = 0.5 * pow(stepper->Force.norm(), 2); // should decrease with the updated learning rate from lineSearch
     double dq0 = -(stepper->Force.transpose() * stepper->Jacobian * stepper->DX)(0);
 
     bool success = false;
