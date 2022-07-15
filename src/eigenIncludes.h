@@ -5,7 +5,7 @@
 #include <Eigen/Sparse>
 
 #include <unistd.h>
-#include <zmq.hpp>
+//#include <zmq.hpp>
 #include "math.h"
 #include <stdlib.h>
 #include <fcntl.h>
