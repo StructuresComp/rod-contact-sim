@@ -118,9 +118,9 @@ If this doesn't work, execute ```chmod +x run.sh``` prior to running.
 ***
 
 ### Citation
-If our work has helped your research, please cite the following paper.
+If our work has helped your research, please cite the following papers.
 ```
-article{10.1115/1.4050238,
+@article{choi_imc_2021,
     author = {Choi, Andrew and Tong, Dezhong and Jawed, Mohammad K. and Joo, Jungseock},
     title = "{Implicit Contact Model for Discrete Elastic Rods in Knot Tying}",
     journal = {Journal of Applied Mechanics},
@@ -128,6 +128,15 @@ article{10.1115/1.4050238,
     number = {5},
     year = {2021},
     month = {03},
+}
+
+@misc{tong_imc_2022,
+  author = {Tong, Dezhong and Choi, Andrew and Joo, Jungseock and Jawed, M. Khalid},
+  title = {A Fully Implicit Method for Robust Frictional Contact Handling in Elastic Rods},
+  publisher = {arXiv},
+  year = {2022},
+  doi = {10.48550/ARXIV.2205.10309},
+  url = {https://arxiv.org/abs/2205.10309},
 }
 ```
 
